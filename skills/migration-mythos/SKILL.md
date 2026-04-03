@@ -121,6 +121,16 @@ EXTRA_INSTRUCTIONS = <instruções adicionais do usuário>
 AUTO_EXECUTE    = <true|false> (o usuário aprovou execução automática?)
 ```
 
+### 0.3 — Pre-flight Check (Python Dependency)
+
+1. Execute `python3 --version` ou `python --version` silenciosamente.
+2. **Se o Python estiver instalado:** Utilize os scripts em `skills/migration-mythos/scripts/` nas fases subsequentes normalmente.
+3. **Se o Python NÃO estiver instalado:** 
+   - NÃO aborte a migração.
+   - Ative o modo **Native Fallback**.
+   - Em vez de usar `scan_repo.py`, `diff_versions.py` ou `validate_migration.py`, substitua o trabalho usando exaustivamente as ferramentas nativas `glob` e `grep_search` para encontrar os artefatos e validá-los.
+
+
 ---
 
 ## Phase 1 — Context Engineering do Legado

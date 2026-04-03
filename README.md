@@ -2,9 +2,17 @@
 
 O **Migration Mythos** é um orquestrador avançado para o [Gemini CLI](https://github.com/google/gemini-cli) projetado para automatizar e estruturar a migração de features e módulos de sistemas legados para repositórios modernos.
 
-Ele não apenas escreve código: ele faz arqueologia reversa, entende o negócio, planeja a extração e valida os resultados em um fluxo rigoroso de 6 fases.
+---
+
+## ⚠️ Pré-requisitos
+
+Para que a automação pesada funcione de forma otimizada, é **altamente recomendado** ter o Python instalado na máquina:
+- **Python 3.8+** (utilizado pelos scripts de varredura e validação em massa).
+
+*(Nota: Se o Python não estiver disponível no ambiente, a IA está programada para utilizar ferramentas de fallback nativas do Gemini CLI, como `grep_search` e `glob`. O processo continuará funcionando, mas poderá consumir mais tokens).*
 
 ---
+
 
 ## 📦 O que tem na caixa?
 

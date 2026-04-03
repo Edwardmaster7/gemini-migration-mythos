@@ -121,14 +121,16 @@ EXTRA_INSTRUCTIONS = <instruções adicionais do usuário>
 AUTO_EXECUTE    = <true|false> (o usuário aprovou execução automática?)
 ```
 
-### 0.3 — Pre-flight Check (Python Dependency)
+### 0.3 — Pre-flight Check (Python & uv Dependency)
 
-1. Execute `python3 --version` ou `python --version` silenciosamente.
-2. **Se o Python estiver instalado:** Utilize os scripts em `skills/migration-mythos/scripts/` nas fases subsequentes normalmente.
-3. **Se o Python NÃO estiver instalado:** 
+1. Execute silenciosamente `command -v uv` para verificar se o `uv` está disponível.
+2. Se `uv` estiver disponível: 
+   - Utilize-o para rodar todos os scripts da fase de automação: `uv run uv run python skills/migration-mythos/scripts/...`
+3. Se `uv` NÃO estiver disponível, verifique o `python3`:
+   - Execute `python3 --version`. Se existir, utilize `python3 skills/migration-mythos/scripts/...`
+4. **Se nenhum estiver disponível (Native Fallback):** 
    - NÃO aborte a migração.
-   - Ative o modo **Native Fallback**.
-   - Em vez de usar `scan_repo.py`, `diff_versions.py` ou `validate_migration.py`, substitua o trabalho usando exaustivamente as ferramentas nativas `glob` e `grep_search` para encontrar os artefatos e validá-los.
+   - Em vez de usar os scripts `.py`, substitua o trabalho usando exaustivamente as ferramentas nativas `glob` e `grep_search` para simular as extrações de artefatos.
 
 
 ---
@@ -153,7 +155,7 @@ Fontes e Dicas: [FEATURE_NAME, linguagem principal se conhecida, sinônimos rele
 
 Se `MULTI_VERSION = true`, antes de ativar `legacy-context-engineer`:
 
-1. Executar: `python skills/migration-mythos/scripts/diff_versions.py --root <LEGACY_PATH> --feature "<FEATURE_NAME>"`
+1. Executar: `uv run python skills/migration-mythos/scripts/diff_versions.py --root <LEGACY_PATH> --feature "<FEATURE_NAME>"`
 2. Identificar a **versão canônica** (a mais completa)
 3. Ativar `legacy-context-engineer` apontando para a versão canônica
 4. **Opcionalmente**, executar `legacy-context-engineer` nos outros diretórios de versão para capturar divergências
@@ -384,7 +386,7 @@ Critérios especiais do usuário: [EXTRA_INSTRUCTIONS relevantes para validaçã
 ### 5.2 — Executar Script de Validação
 
 ```bash
-python skills/migration-mythos/scripts/validate_migration.py \
+uv run python skills/migration-mythos/scripts/validate_migration.py \
   --workspace ./migration_workspace/ \
   --target <TARGET_PATH> \
   --feature <FEATURE_NAME>

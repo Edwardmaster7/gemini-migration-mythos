@@ -4,6 +4,17 @@ O **Migration Mythos** é um orquestrador avançado para o [Gemini CLI](https://
 
 ---
 
+## ⚠️ Pré-requisitos (Python & uv)
+
+Para que a automação pesada funcione de forma otimizada e isolada, este projeto adota o **`uv`** como gerenciador principal:
+- **[uv](https://github.com/astral-sh/uv)** (gerenciador de dependências e ambiente Python ultra-rápido).
+
+Se você tiver o `uv` instalado, a IA executará os scripts via `uv run python` (garantindo ambiente isolado e limpo).
+Caso tenha apenas o `python3` global, a IA fará o fallback nativo.
+*(Nota: Se nenhum dos dois estiver disponível, o Agente possui instruções de fallback total para utilizar apenas ferramentas nativas do Gemini CLI, como `grep_search` e `glob`, consumindo um pouco mais de tokens).*
+
+---
+
 ## ⚠️ Pré-requisitos
 
 Para que a automação pesada funcione de forma otimizada, é **altamente recomendado** ter o Python instalado na máquina:

@@ -1,5 +1,5 @@
 {
     "name": "migration-mythos",
     "description": "Orchestrates end-to-end feature migration from legacy repositories to modern targets. Bundles legacy-context-engineer and legacy-feature-archaeologist skills.",
-    "version": "1.1.1"
+    "version": "1.1.2"
 }

@@ -169,7 +169,10 @@ Só prossiga se os 5 checks forem satisfeitos.
 Gere **exatamente 3 arquivos** (`overview.md`, `business_rules.md`, `tech_design.md`). Toda afirmação deve ser sustentada por evidência concreta: caminho do artefato, trecho de código, bloco de configuração, comando, query, contrato ou linha relevante.
 
 **Regras de Gravação (Idempotência e Gate de Confirmação):**
-1. **Sinônimos de Documentação:** Antes de salvar, busque por pastas de documentação existentes na raiz (`docs`, `documentation`, `documentacao`, `doc`). Salve os artefatos dentro do diretório correspondente.
+1. **Estrutura de Pastas (Raiz e features/):** 
+   - A documentação gerada DEVE ficar isolada na sua própria pasta: ex. `docs/features/[nome_da_feature]/`.
+   - **MUITO IMPORTANTE:** Busque pela pasta base de documentação (sinônimos: `docs`, `documentation`, `documentacao`, `doc`) SEMPRE na **raiz primária / pasta pai**. Se o legado for multi-versão ou multi-módulo (ex: tem pastas `v1/`, `v2/`, ou `front/`, `back/`), a pasta de documentação deve estar no nível PAI de todos eles, e NÃO espalhada dentro de cada micro-versão.
+   - Se nenhuma existir, crie o padrão `documentacao/features/[nome_da_feature]/` na raiz pai. Salve os 3 artefatos apenas dentro deste diretório.
 2. **Idempotência (Aprovação Obrigatória):** Verifique se os arquivos já existem. Em caso positivo, NUNCA sobreescreva destrutivamente ou atualize de forma autônoma. Se ALGUM dos 3 arquivos já existir, você DEVE interromper a gravação e perguntar:
 
 ```

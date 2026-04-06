@@ -72,8 +72,17 @@ Utilize as ferramentas `glob` e `grep_search` para extrair amostras físicas do 
 #### Etapa 3.1.1 - Tratamento de Sinônimos e Verificação de Pastas
 Busque primeiramente por pastas que representem documentação (sinônimos como `docs`, `documentation`, `documentacao`, `doc`) na raiz do projeto legado mapeado. Dentro da pasta encontrada (ou na principal se houver várias), verifique se existe o subdiretório `ai`. Caso não exista *nenhum* sinônimo de documentação, crie o padrão `documentacao/ai`. Se a pasta base já existir, apenas crie o subdiretório `ai` se necessário. (Use `run_command` com `mkdir -p` de forma idempotente).
 
-#### Etapa 3.1.2 - Verificação de Arquivos e Idempotência
-Verifique se os arquivos `GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md` já existem. **Regra de Idempotência:** NUNCA recrie pastas ou arquivos que já existem. Se o arquivo existir, mescle ou atualize o conteúdo apenas se houver informações novas, preservando a estrutura existente sem sobreescrever destrutivamente. Caso não existam, crie-os utilizando a ferramenta `write_file`.
+#### Etapa 3.1.2 - Verificação de Arquivos e Gate de Confirmação
+Verifique se os arquivos `GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md` já existem. **Regra de Idempotência:** NUNCA recrie pastas ou arquivos que já existem silenciosamente. Se QUALQUER arquivo existir, você DEVE interromper o processo e perguntar explicitamente ao usuário:
+
+```
+⚠️ Os arquivos de contexto já existem. Você deseja:
+1. Sobrescrever (reescrever do zero)
+2. Fazer mesclagem (atualizar sem perder o que já existe)
+3. Ignorar/Pular a geração desta etapa
+```
+
+**⛔ BLOQUEIO:** Aguarde a resposta do usuário antes de realizar qualquer gravação. Siga exatamente a opção escolhida. Caso os arquivos não existam, pode criá-os normalmente com `write_file`.
 
 ### Etapa 3.2 — Gravação Segura
 

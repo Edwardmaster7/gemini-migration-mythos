@@ -237,9 +237,15 @@ Verificar que os seguintes artefatos foram gerados DENTRO do repositório legado
 
 **Delegado para:** skill `legacy-feature-archaeologist`
 
-### 2.1 — Ativação da Skill
+### 2.1 — Verificação de Idempotência (Pre-flight)
 
-Invocar a skill com o seguinte formato, utilizando os artefatos gerados na Phase 1 como contexto:
+Antes de acionar a skill de arqueologia, verifique se os artefatos `overview.md`, `business_rules.md` e `tech_design.md` já existem nos diretórios de documentação do projeto legado (ou de cada versão correspondente no caso de multi-versão). 
+- Utilize `run_command` com `find` ou observe a estrutura de diretórios para buscar por esses arquivos.
+- Se eles já existirem (mesmo parcialmente), a skill `legacy-feature-archaeologist` tem instruções próprias para mesclar o conteúdo. No entanto, se eles já cobrirem toda a especificação da feature atual, você pode **pular** a ativação da skill e prosseguir para a próxima Phase, poupando processamento.
+
+### 2.2 — Ativação da Skill
+
+Caso decida acionar a arqueologia (conteúdo faltando ou arquivos não existem), invoque a skill com o seguinte formato, utilizando os artefatos gerados na Phase 1 como contexto:
 
 ```
 Feature: [FEATURE_NAME]
@@ -248,7 +254,7 @@ Domain hints: [sinônimos, siglas, aliases, nomes históricos — extraídos do 
 Restrições: [EXTRA_INSTRUCTIONS se relevante para a arqueologia]
 ```
 
-### 2.2 — Para Estruturas Multi-Versão
+### 2.3 — Para Estruturas Multi-Versão
 
 Incluir na invocação todas as fontes relevantes:
 
@@ -261,14 +267,14 @@ Fontes:
 Domain hints: [...]
 ```
 
-### 2.3 — Entregáveis Esperados da Phase 2
+### 2.4 — Entregáveis Esperados da Phase 2
 
-Verificar que os seguintes artefatos foram gerados:
+Verificar que os seguintes artefatos foram gerados ou que já existem previamente:
 - `overview.md` — topologia de componentes, fluxo principal, débito técnico
 - `business_rules.md` — regras de negócio com evidências concretas, cenários Gherkin
 - `tech_design.md` — design técnico, dicionário de dados, acoplamentos, efeitos colaterais
 
-**Ler estes 3 arquivos antes de iniciar a Phase 3.** Eles são o insumo primário do planejamento.
+**Ler estes 3 arquivos antes de iniciar a Phase 3 (ou 2.5).** Eles são o insumo primário do planejamento.
 
 ---
 

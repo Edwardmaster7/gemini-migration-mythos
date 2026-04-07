@@ -1,5 +1,5 @@
 {
     "name": "migration-mythos",
-    "description": "Orchestrates end-to-end feature migration from legacy repositories to modern targets. Bundles legacy-context-engineer and legacy-feature-archaeologist skills.",
+    "description": "Orchestrates end-to-end migrations from legacy systems to modern targets. Includes Native/TDD (Superpowers) flows, Idempotent Context Engine, and Domain Archaeologist skills.",
     "version": "1.1.5"
 }

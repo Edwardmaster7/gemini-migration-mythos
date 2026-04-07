@@ -188,10 +188,12 @@ Só prossiga se os 5 checks forem satisfeitos.
 Gere **exatamente 3 arquivos** (`overview.md`, `business_rules.md`, `tech_design.md`). Toda afirmação deve ser sustentada por evidência concreta: caminho do artefato, trecho de código, bloco de configuração, comando, query, contrato ou linha relevante.
 
 **Regras de Gravação (Idempotência e Gate de Confirmação):**
-1. **Estrutura de Pastas (Raiz e features/):** 
-   - A documentação gerada DEVE ficar isolada na sua própria pasta: ex. `docs/features/[nome_da_feature]/`.
-   - **MUITO IMPORTANTE:** Busque pela pasta base de documentação (sinônimos: `docs`, `documentation`, `documentacao`, `doc`) SEMPRE na **raiz primária / pasta pai**. Se o legado for multi-versão ou multi-módulo (ex: tem pastas `v1/`, `v2/`, ou `front/`, `back/`), a pasta de documentação deve estar no nível PAI de todos eles, e NÃO espalhada dentro de cada micro-versão.
-   - Se nenhuma existir, crie o padrão `documentacao/features/[nome_da_feature]/` na raiz pai. Salve os 3 artefatos apenas dentro deste diretório.
+1. **Estrutura de Pastas de Escopo (Domínios e Features):** 
+   - A documentação gerada DEVE respeitar a hierarquia de escopo. 
+   - **MUITO IMPORTANTE:** Busque pela pasta base de documentação (sinônimos: `docs`, `documentation`, `documentacao`, `doc`) SEMPRE na **raiz primária / pasta pai**. 
+   - **Cenário A (Mapeando um Domínio Inteiro):** Crie um arquivo `overview.md` na raiz do domínio (`docs/features/[nome_do_dominio]/overview.md`). Para cada sub-feature descoberta dentro do domínio, crie a subpasta e gere os 3 arquivos lá dentro: ex. `docs/features/[nome_do_dominio]/[nome_da_subfeature]/overview.md`, `business_rules.md`, `tech_design.md`.
+   - **Cenário B (Mapeando uma Feature específica de um Domínio):** Salve os 3 artefatos em `docs/features/[nome_do_dominio_pai]/[nome_da_feature]/`.
+   - **Cenário C (Feature isolada sem Domínio claro):** Salve em `docs/features/[nome_da_feature]/`.
 2. **Idempotência (Execução):** 
    - Resgate a intenção gravada no gate da Phase 0. 
    - Se a decisão foi sobrescrever, crie-os com seu write de confiança.
@@ -334,7 +336,8 @@ Then [falha / bloqueio / rollback / efeito]
 ## COMO INVOCAR
 
 ```text
-Feature: [nome da feature]
+Feature: [nome da feature ou domínio]
+Scope: [Feature | Domain]
 Fontes: [repositórios, diretórios, artefatos ou pacotes]
 Domain hints: [sinônimos, siglas, aliases, nomes históricos]
 Restrições: [opcional]

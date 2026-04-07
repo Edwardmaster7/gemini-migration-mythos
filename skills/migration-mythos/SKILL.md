@@ -237,29 +237,44 @@ Verificar que os seguintes artefatos foram gerados DENTRO do repositório legado
 
 **Delegado para:** skill `legacy-feature-archaeologist`
 
-### 2.1 — Verificação de Idempotência (Pre-flight)
+### 2.1 — Classificação de Escopo (Domínio vs Feature)
+
+Antes de iniciar qualquer verificação ou ativação de arqueologia, analise a semântica do `[FEATURE_NAME]` solicitado pelo usuário.
+
+- **Feature:** Refere-se a uma funcionalidade restrita e específica (ex: "exportacao_pdf_cliente", "autenticacao_oauth", "checkout_carrinho").
+- **Domínio:** Refere-se a um sistema amplo, um módulo agregador ou um agrupador de múltiplas features (ex: "clientes", "financeiro", "pagamentos", "estoque").
+
+**Se você identificar o alvo como um Domínio, você DEVE interromper a execução e:**
+1. Explicar e justificar a classificação: *"A funcionalidade '[FEATURE_NAME]' parece ser um Domínio completo composto por várias features, o que gerará um mapeamento profundo de todo o subsistema..."*
+2. Perguntar ativamente: *"Você autoriza a adoção desse entendimento para seguir com o processo exploratório amplo de domínio?"*
+
+**⛔ BLOQUEIO:** Aguarde a confirmação explícita do usuário antes de avançar para as próximas etapas (Idempotência e Ativação).
+
+### 2.2 — Verificação de Idempotência (Pre-flight)
 
 Antes de acionar a skill de arqueologia, verifique se os artefatos `overview.md`, `business_rules.md` e `tech_design.md` já existem nos diretórios de documentação do projeto legado (ou de cada versão correspondente no caso de multi-versão). 
 - Utilize `run_command` com `find` ou observe a estrutura de diretórios para buscar por esses arquivos.
 - Se eles já existirem (mesmo parcialmente), a skill `legacy-feature-archaeologist` tem instruções próprias para mesclar o conteúdo. No entanto, se eles já cobrirem toda a especificação da feature atual, você pode **pular** a ativação da skill e prosseguir para a próxima Phase, poupando processamento.
 
-### 2.2 — Ativação da Skill
+### 2.3 — Ativação da Skill
 
 Caso decida acionar a arqueologia (conteúdo faltando ou arquivos não existem), invoque a skill com o seguinte formato, utilizando os artefatos gerados na Phase 1 como contexto:
 
 ```
 Feature: [FEATURE_NAME]
+Scope: [Feature | Domain] (classificação identificada na etapa 2.1)
 Fontes: [LEGACY_PATH] (priorizar versão canônica se multi-versão)
 Domain hints: [sinônimos, siglas, aliases, nomes históricos — extraídos do ai-context.md se disponível]
 Restrições: [EXTRA_INSTRUCTIONS se relevante para a arqueologia]
 ```
 
-### 2.3 — Para Estruturas Multi-Versão
+### 2.4 — Para Estruturas Multi-Versão
 
 Incluir na invocação todas as fontes relevantes:
 
 ```
 Feature: [FEATURE_NAME]
+Scope: [Feature | Domain]
 Fontes:
   - [LEGACY_PATH]/v3/ (canônica)
   - [LEGACY_PATH]/v2/ (verificar divergências)
@@ -267,7 +282,7 @@ Fontes:
 Domain hints: [...]
 ```
 
-### 2.4 — Entregáveis Esperados da Phase 2
+### 2.5 — Entregáveis Esperados da Phase 2
 
 Verificar que os seguintes artefatos foram gerados ou que já existem previamente:
 - `overview.md` — topologia de componentes, fluxo principal, débito técnico

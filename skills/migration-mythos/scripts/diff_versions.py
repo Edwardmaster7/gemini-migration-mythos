@@ -15,7 +15,7 @@ import difflib
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -170,7 +170,7 @@ def main():
 
     output = {
         "diff_metadata": {
-            "analyzed_at": datetime.utcnow().isoformat() + "Z",
+            "analyzed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "root_path": str(root_path),
             "feature_name": args.feature,
             "versions_found": [v["name"] for v in versions],

@@ -19,7 +19,7 @@ Realizar uma análise exaustiva, baseada em evidências, de uma feature específ
 
 <phase id="0" name="Verificação de Idempotência Inicial">
 
-Antes de investigar a codebase, busque pela pasta base de documentação (sinônimos como `docs`, `documentation`, `documentacao`, `doc`) na **raiz primária / pasta pai** e verifique se os artefatos `overview.md`, `business_rules.md` e `tech_design.md` já existem na pasta correspondente da feature (`features/[nome_da_feature]/`).
+Antes de investigar a codebase, busque pela pasta base de documentação de IA (`ai/`, ou equivalente se nomeado no gate principal). Se o parâmetro for `Scope: Domain`, verifique se os artefatos `overview.md`, `business_rules.md` e `tech_design.md` já existem na pasta `domains/[nome_do_dominio]/`. Se o parâmetro for `Scope: Feature`, verifique na pasta `features/[nome_da_feature]/`. Todos os novos arquivos devem obrigatoriamente ser criados seguindo esse espelhamento estrutural.
 
 **Regra de Idempotência:** Se ALGUM dos 3 arquivos já existir, você DEVE interromper imediatamente a execução e perguntar:
 
@@ -198,10 +198,10 @@ Gere **exatamente 3 arquivos** (`overview.md`, `business_rules.md`, `tech_design
 **Regras de Gravação (Idempotência e Gate de Confirmação):**
 1. **Estrutura de Pastas de Escopo (Domínios e Features):** 
    - A documentação gerada DEVE respeitar a hierarquia de escopo. 
-   - **MUITO IMPORTANTE:** Busque pela pasta base de documentação (sinônimos: `docs`, `documentation`, `documentacao`, `doc`) SEMPRE na **raiz primária / pasta pai**. 
-   - **Cenário A (Mapeando um Domínio Inteiro):** Crie um arquivo `overview.md` na raiz do domínio (`docs/features/[nome_do_dominio]/overview.md`). Para cada sub-feature descoberta dentro do domínio, crie a subpasta e gere os 3 arquivos lá dentro: ex. `docs/features/[nome_do_dominio]/[nome_da_subfeature]/overview.md`, `business_rules.md`, `tech_design.md`.
-   - **Cenário B (Mapeando uma Feature específica de um Domínio):** Salve os 3 artefatos em `docs/features/[nome_do_dominio_pai]/[nome_da_feature]/`.
-   - **Cenário C (Feature isolada sem Domínio claro):** Salve em `docs/features/[nome_da_feature]/`.
+   - **MUITO IMPORTANTE:** Trabalhe dentro da base de documentação de IA (`ai/`, `docs/ai/` ou `documentacao/ai/` na raiz do sistema legado). 
+   - **Cenário A (Scope é Domain - Mapeando um Domínio Inteiro):** Traga o viés de Domínio (ex: conjunto de features interligadas). Salve as descobertas de alto nível do domínio em `domains/[nome_do_dominio]/`. Você **não deve** gravar os artefatos na pasta genérica `features/`. Exemplo: `ai/domains/clientes/overview.md`.
+   - **Cenário B (Scope é Feature de um Domínio Claro):** Salve em `domains/[nome_do_dominio]/features/[nome_da_feature]/`.
+   - **Cenário C (Scope é Feature isolada sem Domínio):** Salve no diretório raiz de features em `features/[nome_da_feature]/`.
 2. **Idempotência (Execução):** 
    - Resgate a intenção gravada no gate da Phase 0. 
    - Se a decisão foi sobrescrever, crie-os com seu write de confiança.

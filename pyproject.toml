@@ -1,6 +1,6 @@
 [project]
 name = "gemini-migration-mythos"
-version = "1.2.0"
+version = "1.3.0"
 description = "Bundle de migração ponta-a-ponta: inclui Orquestrador (Migration Mythos), Engenharia de Contexto Legado e Arqueologia de Features."
 readme = "README.md"
 authors = [

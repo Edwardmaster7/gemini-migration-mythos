@@ -1,5 +1,5 @@
 {
     "name": "migration-mythos",
     "description": "Orchestrates end-to-end migrations from legacy systems to modern targets. Includes Native/TDD (Superpowers) flows, Idempotent Context Engine, and Domain Archaeologist skills.",
-    "version": "1.2.0"
+    "version": "1.3.0"
 }

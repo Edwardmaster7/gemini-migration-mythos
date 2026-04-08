@@ -90,7 +90,11 @@ Utilize as ferramentas `glob` e `grep_search` para extrair amostras físicas do 
 ### Etapa 3.1 — Estruturação de Pastas
 
 #### Etapa 3.1.1 - Tratamento de Sinônimos e Verificação de Pastas
-Busque primeiramente por pastas que representem documentação (sinônimos como `docs`, `documentation`, `documentacao`, `doc`) na raiz do projeto legado mapeado. Dentro da pasta encontrada (ou na principal se houver várias), verifique se existe o subdiretório `ai`. Caso não exista *nenhum* sinônimo de documentação, crie o padrão `documentacao/ai`. Se a pasta base já existir, apenas crie o subdiretório `ai` se necessário. (Use `run_command` com `mkdir -p` de forma idempotente).
+Antes de qualquer coisa, verifique se foi fornecido o parâmetro **`Diretório Raiz de IA (Saída)`** na invocação.
+- **Se fornecido:** Use **esse** caminho como base para criar/procurar a pasta de documentação de IA. Mesmo que a varredura tenha sido feita em um subdiretório (versão canônica), os artefatos devem ser salvos na raiz agrupadora.
+- **Se não fornecido:** Use o `Diretório Alvo` como base (fallback).
+
+Na pasta raiz determinada acima, busque por sinônimos de documentação (`docs`, `documentation`, `documentacao`, `doc`). Dentro da pasta encontrada (ou na principal se houver várias), verifique se existe o subdiretório `ai`. Caso não exista nenhum sinônimo de documentação, crie o padrão `documentacao/ai`. Se a pasta base já existir, apenas crie o subdiretório `ai` se necessário. (Use `run_command` com `mkdir -p` de forma idempotente.)
 
 #### Etapa 3.1.2 - Idempotência e Confirmação de Ação
 Resgate a decisão do usuário obtida no gate da Phase 0. 

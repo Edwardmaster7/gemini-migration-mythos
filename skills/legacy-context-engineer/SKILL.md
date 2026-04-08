@@ -95,7 +95,8 @@ Busque primeiramente por pastas que representem documentação (sinônimos como 
 #### Etapa 3.1.2 - Idempotência e Confirmação de Ação
 Resgate a decisão do usuário obtida no gate da Phase 0. 
 - Se a escolha foi sobrescrever, crie-os utilizando a ferramenta `write_file`.
-- Se a escolha foi mesclar, atualize o conteúdo apenas com as novas descobertas.
+- Se a escolha foi mesclar, atualize o conteúdo apenas se houver **novas descobertas estruturais em nível de Domínio/Macro-Arquitetura**. 
+  > 🚫 **NÃO MISTURE CONTEXTO DE FEATURE:** Se a skill foi ativada como parte de um *Context Reset* de uma feature recém-descoberta (ex: "clientes"), **NÃO USE** o merge para injetar os nomes específicos (God Classes, Controllers) dessa feature dentro do arquivo `ai-context.md` alterando a descrição raiz do sistema. O detalhamento de classes e regras da feature será tratado posteriormente pelo *Archaeologist*. O `ai-context.md` deve permanecer como um mapa global e agnóstico de feature.
 - Caso os arquivos não existissem na Phase 0, apenas crie-os normalmente.
 
 ### Etapa 3.2 — Gravação Segura

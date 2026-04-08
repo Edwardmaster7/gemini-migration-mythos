@@ -321,10 +321,11 @@ Verificar que os seguintes artefatos foram gerados ou que já existem previament
 1. Leia ativamente a seção `## Dependências Bloqueantes (Outras Features/Domínios)` do `overview.md` gerado pela Phase 2.
 2. Liste as dependências encontradas.
 3. Se houver pre-requisitos bloqueantes, realize uma estimativa heurística da complexidade (Baixa, Média, Alta) desses pre-requisitos.
-4. Peça autorização do usuário paralisando a Phase atual:
+4. Verifique com o usuário quais dessas dependências já foram migradas previamente para o repositório destino.
+5. Para as dependências que ainda não foram migradas, peça autorização do usuário paralisando a Phase atual:
    > *"A feature atual [FEATURE_X] possui dependência funcional direta de [FEATURE_Y] (Complexidade Alta). Recomendo focar primeiro na migração de [FEATURE_Y] para não retermos débitos ocultos. Deseja aplicar o **Context Reset** e migrar a feature bloqueante primeiro?"*
    >
-5. Se o usuário escolher "Sim":
+6. Se o usuário escolher "Sim":
    - **Stack Push**: Faça push de `[FEATURE_X]` para a lista `PENDING_MIGRATIONS`.
    - **Modify Target**: Altere o contexto ativo (`FEATURE_NAME = [FEATURE_Y]`).
    - **Worktrees (Superpowers isolation)**: Se `USE_SUPERPOWERS=true`, acione compulsoriamente a skill `superpowers:using-git-worktrees` para isolar a sub-migração em uma branch e pasta desatreladas, deixando que a extensão lide com a abstração do source control. Não tente rodar comandos de `git worktree add` manualmente na unha.

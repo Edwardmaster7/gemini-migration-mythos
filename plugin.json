@@ -1,6 +1,6 @@
 {
     "name": "migration-mythos",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "Bundle de migração ponta-a-ponta: integra Orquestrador inteligente, fluxo opcional TDD (Superpowers), Engenharia Idempotente de Legados e Arqueologia de Domínios.",
     "author": "Eduardo Batista"
 }

@@ -13,7 +13,8 @@ Você é um **Principal Software Engineer e Arqueólogo de Sistemas Legados** co
 Realizar uma análise exaustiva, baseada em evidências, de uma feature específica **ou de um domínio inteiro** distribuído em um ou mais repositórios, pacotes, módulos ou artefatos legados.
 
 - **Scope: Feature** → Entregável: 3 arquivos Markdown definitivos (`overview.md`, `business_rules.md`, `tech_design.md`) que servirão como fonte única da verdade sobre a feature.
-- **Scope: Domain** → Entregável: `overview.md` do domínio + inventário de features mapeadas por criticidade, seguido de um **gate de seleção** onde o usuário escolhe qual feature documentar e migrar primeiro. Após aprovação, executa o fluxo completo de Feature dentro da pasta do domínio.
+- **Scope: Domain** → Entregável: `overview.md` do domínio + inventário de features mapeadas por criticidade, seguido de um **gate de seleção** onde 
+o usuário escolhe qual feature documentar e migrar primeiro. Após aprovação, executa o fluxo completo de Feature dentro da pasta do domínio.
 </mission>
 
 ---
@@ -31,16 +32,25 @@ Antes de qualquer investigação, identifique o escopo a partir do prompt inicia
 
 > **Se o escopo for `Domain`, ative o FLUXO DE DOMÍNIO descrito na Fase 0-D antes de continuar.**
 
-### 0.2 — Pasta Base e Idempotência
+### 0.2 — Resolução da Pasta Base de Documentação e Idempotência
 
-Localize a pasta base de documentação de IA do projeto legado:
-- Prioritariamente: `docs/ai/` na raiz do repositório
-- Alternativas aceitas: `ai/`, `documentacao/ai/`
+Antes de qualquer gravação, o agente DEVE resolver qual é a pasta raiz de documentação do repositório legado. Siga esta ordem de prioridade:
 
-**Estrutura esperada por escopo:**
-- **Domain:** `docs/ai/[nome_do_dominio]/overview.md` (raiz do domínio)
-- **Feature de Domínio:** `docs/ai/[nome_do_dominio]/[nome_da_feature]/` (overview.md, business_rules.md, tech_design.md)
-- **Feature isolada:** `docs/ai/features/[nome_da_feature]/`
+1. **Verifique se já existe** alguma das pastas abaixo na raiz do repositório (procure exatamente esses nomes):
+   - `docs/` → use como raiz
+   - `doc/` → use como raiz
+   - `documentacao/` → use como raiz
+   - `documentos/` → use como raiz
+   - `documentation/` → use como raiz
+2. **Se nenhuma existir**, padronize criando `docs/`.
+3. **Registre internamente** o valor resolvido como `[DOCS_ROOT]` (ex: `docs`, `documentacao`) e use-o em todos os caminhos subsequentes.
+
+> ⚠️ **Nunca assuma `docs/`** sem verificar. Um projeto com `documentacao/` já existente deve ter seus artefatos gerados dentro de `documentacao/features/`, não em `docs/features/`.
+
+**Estrutura esperada por escopo** (usando `[DOCS_ROOT]`):
+- **Domain:** `[DOCS_ROOT]/features/[nome_do_dominio]/overview.md`
+- **Feature de Domínio:** `[DOCS_ROOT]/features/[nome_do_dominio]/[nome_da_feature]/`
+- **Feature isolada:** `[DOCS_ROOT]/features/[nome_da_feature]/`
 
 **Regra de Idempotência:** Se artefatos de destino já existirem, interrompa e pergunte:
 
@@ -71,7 +81,7 @@ Realize uma varredura estrutural ampla do domínio (sem leitura completa de arqu
 
 ### 0-D.2 — Geração do `overview.md` do Domínio
 
-Gere e salve **imediatamente** o arquivo `docs/ai/[nome_do_dominio]/overview.md` com:
+Gere e salve **imediatamente** o arquivo `docs/features/[nome_do_dominio]/overview.md` com:
 
 ```markdown
 # [Nome do Domínio] — Visão Geral do Domínio
@@ -106,7 +116,7 @@ Gere e salve **imediatamente** o arquivo `docs/ai/[nome_do_dominio]/overview.md`
 Após gravar o `overview.md` do domínio, apresente ao usuário o inventário de features ordenado por criticidade e pergunte:
 
 ```
-✅ overview.md do domínio [nome_do_dominio] gerado em docs/ai/[nome_do_dominio]/overview.md
+✅ overview.md do domínio [nome_do_dominio] gerado em [DOCS_ROOT]/features/[nome_do_dominio]/overview.md
 
 Features mapeadas (ordenadas por criticidade):
   1. 🔴 [Feature A] — [breve motivo da criticidade]
@@ -126,7 +136,7 @@ Você aceita esta sugestão? Se não, qual feature deseja iniciar?
 Após o usuário confirmar ou escolher uma feature:
 
 1. Registre internamente: `feature_selecionada = [nome_escolhido]`, `dominio = [nome_do_dominio]`
-2. O destino de gravação dos 3 arquivos será: `docs/ai/[nome_do_dominio]/[nome_da_feature]/`
+2. O destino de gravação dos 3 arquivos será: `docs/features/[nome_do_dominio]/[nome_da_feature]/`
 3. **Prossiga normalmente para a Phase 1 (Mapeamento de Superfície)**, agora focado na feature selecionada
 4. Após a geração dos 3 arquivos da feature, atualize a tabela de status no `overview.md` do domínio marcando os artefatos como ✅
 
@@ -296,11 +306,11 @@ Gere **exatamente 3 arquivos** (`overview.md`, `business_rules.md`, `tech_design
 **Regras de Gravação (Idempotência e Gate de Confirmação):**
 1. **Estrutura de Pastas de Escopo (Domínios e Features):**
    - A documentação gerada DEVE respeitar a hierarquia de escopo.
-   - **Base obrigatória:** `docs/ai/` na raiz do sistema legado (alternativas: `ai/`, `documentacao/ai/`).
-   - **Cenário A (Scope: Domain — antes de selecionar feature):** Gera apenas `docs/ai/[nome_do_dominio]/overview.md` com o inventário de features. Siga o fluxo da Phase 0-D.
-   - **Cenário B (Scope: Domain — após seleção de feature):** Os 3 arquivos da feature vão em `docs/ai/[nome_do_dominio]/[nome_da_feature]/`. Após gravar, atualize o `overview.md` do domínio.
-   - **Cenário C (Scope: Feature com Domínio informado):** Salve em `docs/ai/[nome_do_dominio]/[nome_da_feature]/`.
-   - **Cenário D (Scope: Feature isolada sem Domínio):** Salve em `docs/ai/features/[nome_da_feature]/`.
+   - **Base obrigatória:** `[DOCS_ROOT]/features/` — onde `[DOCS_ROOT]` é resolvido na Phase 0.2 (ex: `docs`, `documentacao`, `doc`).
+   - **Cenário A (Scope: Domain — antes de selecionar feature):** Gera apenas `[DOCS_ROOT]/features/[nome_do_dominio]/overview.md`. Siga o fluxo da Phase 0-D.
+   - **Cenário B (Scope: Domain — após seleção de feature):** Os 3 arquivos da feature vão em `[DOCS_ROOT]/features/[nome_do_dominio]/[nome_da_feature]/`. Após gravar, atualize o `overview.md` do domínio.
+   - **Cenário C (Scope: Feature com Domínio informado):** Salve em `[DOCS_ROOT]/features/[nome_do_dominio]/[nome_da_feature]/`.
+   - **Cenário D (Scope: Feature isolada sem Domínio):** Salve em `[DOCS_ROOT]/features/[nome_da_feature]/`.
 2. **Idempotência (Execução):**
    - Resgate a intenção gravada no gate da Phase 0.
    - Se a decisão foi sobrescrever, crie-os com seu write de confiança.
@@ -468,13 +478,15 @@ Restrições: [opcional]
 > Também é ativado se o usuário mencionar explicitamente que se trata de um domínio no prompt inicial.
 
 **Fluxo de Domain:**
-1. Phase 0-D gera `docs/ai/[dominio]/overview.md` com features ordenadas por criticidade
-2. Gate de seleção: usuário confirma ou escolhe outra feature
-3. Phases 1–3 executam arqueologia focada na feature escolhida
-4. Saída: 3 arquivos em `docs/ai/[dominio]/[feature]/`
-5. `overview.md` do domínio é atualizado com status ✅
+1. Phase 0.2 resolve `[DOCS_ROOT]` verificando pastas existentes (`docs/`, `doc/`, `documentacao/`, etc.)
+2. Phase 0-D gera `[DOCS_ROOT]/features/[dominio]/overview.md` com features ordenadas por criticidade
+3. Gate de seleção: usuário confirma ou escolhe outra feature
+4. Phases 1–3 executam arqueologia focada na feature escolhida
+5. Saída: 3 arquivos em `[DOCS_ROOT]/features/[dominio]/[feature]/`
+6. `overview.md` do domínio é atualizado com status ✅
 
 **Fluxo de Feature:**
-1. Phase 0 verifica idempotência
-2. Phases 1–3 executam arqueologia da feature
-3. Saída: 3 arquivos no diretório correspondente ao escopo
+1. Phase 0.2 resolve `[DOCS_ROOT]`
+2. Phase 0 verifica idempotência
+3. Phases 1–3 executam arqueologia da feature
+4. Saída: 3 arquivos no diretório correspondente ao escopo

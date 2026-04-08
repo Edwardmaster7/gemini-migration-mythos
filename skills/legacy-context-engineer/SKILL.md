@@ -16,20 +16,66 @@ Mapear exaustivamente um diretório ou ecossistema legado específico, identific
 
 ## PROTOCOLO DE EXECUÇÃO
 
-<phase id="0" name="Verificação de Idempotência Inicial">
+<phase id="0" name="Verificação de Idempotência por Sub-Projeto">
 
-Antes de iniciar qualquer varredura com o `@codebase_investigator` (Phase 1), faça uma busca por pastas de documentação (alvo da Etapa 3.1.1) e verifique se os arquivos `GEMINI.md`, `ai-context.md` e `ai-discovery-guidelines.md` já existem.
+> **⚡ Esta phase é obrigatória e deve ser concluída ANTES de qualquer invocação do `@codebase_investigator` ou acesso ao código.**
 
-**Regra de Idempotência:** Se QUALQUER arquivo existir, você DEVE parar IMEDIATAMENTE e perguntar ao usuário:
+### 0.1 — Identificar os Diretórios a Analisar
+
+Com base no parâmetro `Diretório Alvo` fornecido na invocação:
+
+- **Se o diretório alvo contém sub-projetos** (ex: repositório agrupador com `api-legada-java/`, `monolito-delphi/`, `monolito-vaadin/`): liste os sub-diretórios relevantes. Cada um é tratado como um projeto independente.
+- **Se o diretório alvo é um único projeto**: trate-o como lista com um único item.
+
+### 0.2 — Verificar Idempotência por Sub-Projeto
+
+Para **cada** sub-projeto identificado, verifique se os 3 artefatos de contexto já existem. O agente DEVE procurar ativamente dentro de **cada sub-projeto individualmente**, buscando pelos seguintes sinônimos de pasta de documentação:
 
 ```
-⚠️ Os arquivos de contexto já existem. Você deseja:
-1. Sobrescrever (reescrever do zero, refazendo a varredura)
-2. Fazer mesclagem (atualizar sem perder o que já existe)
-3. Ignorar/Pular a varredura (já temos o contexto necessário)
+[sub-projeto]/docs/ai/
+[sub-projeto]/doc/ai/
+[sub-projeto]/documentacao/ai/
+[sub-projeto]/documentos/ai/
+[sub-projeto]/documentation/ai/
 ```
 
-**⛔ BLOQUEIO:** Aguarde a resposta do usuário. Se ele escolher 3, encerre a skill com sucesso sem invocar o codebase-investigator. Se 1 ou 2, prossiga para a Phase 1 guardando essa intenção de gravação para a Phase 3.
+Em cada pasta encontrada, verificar a existência de:
+- `GEMINI.md` (na raiz do sub-projeto)
+- `ai-context.md`
+- `ai-discovery-guidelines.md`
+
+> ⚠️ **NÃO** verifique apenas a pasta raiz do agrupador. Cada sub-projeto tem sua própria pasta de documentação e deve ser verificado individualmente.
+
+### 0.3 — Montar Relatório de Status e Gate de Decisão
+
+Após verificar todos os sub-projetos, apresente um relatório consolidado ao usuário:
+
+```
+📋 Status dos artefatos de contexto:
+
+  ✅ [sub-projeto-A]/ — contexto já existe em documentacao/ai/
+  ⬜ [sub-projeto-B]/ — sem contexto (será gerado)
+  ⚠️ [sub-projeto-C]/ — contexto parcial: falta ai-context.md
+
+Para os projetos com contexto existente (✅), o que deseja?
+  1. Sobrescrever (refazer a varredura do zero)
+  2. Mesclar (atualizar com novas descobertas)
+  3. Pular (manter como está e não re-analisar)
+  
+Responda com: [opção] para todos, ou [sub-projeto]: [opção] para configurar individualmente.
+```
+
+**⛔ BLOQUEIO:** Aguarde a resposta do usuário antes de iniciar QUALQUER varredura. Registre internamente as decisões por sub-projeto:
+
+```
+IDEMPOTENCY_MAP = {
+  "[sub-projeto-A]": "skip",    // não será re-analisado
+  "[sub-projeto-B]": "create",  // sem artefatos, criar normalmente
+  "[sub-projeto-C]": "merge",   // mesclar com existente
+}
+```
+
+Na Phase 1 e Phase 3, use obrigatoriamente este mapa para determinar quais sub-projetos processar e com qual intenção de gravação.
 
 </phase>
 

@@ -9,6 +9,11 @@ description: >
   "extract and migrate this feature", "move this functionality to the new system".
   Also handles multi-version legacy structures (N directories of the same system).
 ---
+
+> **Compatibilidade:** Este skill funciona em **Claude Code** e **Gemini CLI**.
+> - Sub-agentes `@migration-architect`/`@migration-validator`: invocados via `@nome` no Gemini CLI; via `Agent` tool (tipo `general-purpose`, passsando o conteúdo do arquivo `agents/<nome>.md` como prompt) no Claude Code.
+> - Workflow estruturado: usa **Superpowers** (Gemini CLI) ou **Plan Mode** nativo (Claude Code) — ambos ativados pelo mesmo flag `USE_STRUCTURED_WORKFLOW`.
+> - Sub-skills: ativadas da mesma forma em ambos os ambientes via nome da skill.
 # 🏛️ Migration Mythos
 
 > *"Every legacy system is an archaeological site. We don't demolish — we excavate, study, and translate."*
@@ -59,8 +64,8 @@ Ativar quando o prompt do usuário contiver **qualquer** destes sinais:
 migration-mythos (ORQUESTRADOR)
 │
 ├── PHASE 1 → skill: legacy-context-engineer
-│   └── Gera: GEMINI.md, ai-context.md, ai-discovery-guidelines.md
-│       └── Usa internamente: @codebase_investigator, @generalist
+│   └── Gera: GEMINI.md + CLAUDE.md, ai-context.md, ai-discovery-guidelines.md
+│       └── Usa internamente: @codebase_investigator (Gemini) / Glob+Grep+Agent (Claude Code)
 │
 ├── PHASE 2 → skill: legacy-feature-archaeologist
 │   └── Gera: overview.md, business_rules.md, tech_design.md
@@ -126,10 +131,13 @@ LEGACY_PATH        = <caminho do repo/diretório legado>
 TARGET_PATH        = <caminho do repo destino>
 MULTI_VERSION      = <true|false> (há múltiplos subdiretórios com versões?)
 EXTRA_INSTRUCTIONS = <instruções adicionais do usuário>
-AUTO_EXECUTE       = false  ← PADRÃO. Só muda para true se o usuário disser
-                              explicitamente: "execute automaticamente", "auto-execute"
-                              ou expressão equivalente no prompt original.
-USE_SUPERPOWERS    = <true|false>  ← definido na seção 0.4 abaixo
+AUTO_EXECUTE          = false  ← PADRÃO. Só muda para true se o usuário disser
+                                 explicitamente: "execute automaticamente", "auto-execute"
+                                 ou expressão equivalente no prompt original.
+USE_STRUCTURED_WORKFLOW = <true|false>  ← definido na seção 0.4 abaixo
+  ↳ No Gemini CLI: implementado via Extensão Superpowers
+  ↳ No Claude Code: implementado via Plan Mode nativo + TaskCreate
+USE_SUPERPOWERS    = <true|false>  ← alias legado, equivalente a USE_STRUCTURED_WORKFLOW no Gemini CLI
 PENDING_MIGRATIONS = []     ← Pilha (Stack) para pausar/retomar migrações dependentes
 ```
 
@@ -147,55 +155,50 @@ PENDING_MIGRATIONS = []     ← Pilha (Stack) para pausar/retomar migrações de
    - NÃO aborte a migração.
    - Em vez de usar os scripts `.py`, substitua o trabalho usando exaustivamente as ferramentas nativas `glob` e `grep_search` para simular as extrações de artefatos.
 
-### 0.4 — Superpowers Opt-in
+### 0.4 — Workflow Estruturado Opt-in
 
 Após coletar o contexto obrigatório (seção 0.1), **antes de iniciar qualquer Phase**, perguntar ao usuário:
 
 ```
-⚡ Você gostaria de usar a extensão Superpowers para guiar o planejamento
+⚡ Você gostaria de usar um workflow estruturado para guiar o planejamento
    e execução desta migração?
 
-   Com Superpowers, o agente executa o fluxo canônico:
-     1. brainstorming  → spec salva em docs/superpowers/specs/
-     2. /write-plan    → plano salvo em docs/superpowers/plans/
-     3. /execute-plan  → batches com checkpoints de revisão
-
-   Este fluxo substitui o fluxo nativo das Phases 2.5, 3 e 4.
+   O workflow estruturado oferece:
+     1. Spec de design validada antes de qualquer código
+     2. Plano detalhado com tasks bite-sized e checkpoints
+     3. Execução em batches com revisão entre lotes
 
    → Deseja ativar? (sim / não)
 ```
 
 **Se usuário responder "sim":**
 
-1. Verificar disponibilidade da extensão:
+**— No Gemini CLI (Extensão Superpowers):**
 
+1. Verificar disponibilidade:
    ```bash
-   # Opção A — listar extensões instaladas no gemini-cli
    gemini extensions list 2>/dev/null | grep -i superpowers
-
-   # Opção B — verificar existência do hook de sessão (indicação de instalação)
    ls ~/.gemini/extensions/ 2>/dev/null | grep -i superpowers
    ```
-2. **Se disponível →** `USE_SUPERPOWERS = true`
-
-   - Anunciar: "✅ Extensão Superpowers detectada. Fluxo ativo: brainstorming → /write-plan → /execute-plan."
-3. **Se indisponível →** informar e perguntar:
-
+2. **Se disponível →** `USE_STRUCTURED_WORKFLOW = true`, `USE_SUPERPOWERS = true`
+   - Anunciar: "✅ Extensão Superpowers detectada. Fluxo: brainstorming → /write-plan → /execute-plan."
+3. **Se indisponível →** informar:
    ```
-   ⚠️  A extensão Superpowers não foi detectada neste ambiente.
-
+   ⚠️ A extensão Superpowers não foi detectada.
    Opções:
-     A) Instalar agora:
-        gemini extensions install https://github.com/obra/superpowers
-     B) Continuar sem ela (fluxo nativo das Phases 3 e 4)
-
-   → Qual opção prefere?
+     A) Instalar: gemini extensions install https://github.com/obra/superpowers
+     B) Continuar com fluxo nativo (Phases 3 e 4)
    ```
+   - Instalar → re-verificar → `USE_STRUCTURED_WORKFLOW = true`
+   - Continuar → `USE_STRUCTURED_WORKFLOW = false`
 
-   - Usuário escolhe instalar → re-verificar, depois `USE_SUPERPOWERS = true`
-   - Usuário escolhe continuar → `USE_SUPERPOWERS = false`
+**— No Claude Code (Plan Mode Nativo):**
 
-**Se usuário responder "não":** `USE_SUPERPOWERS = false` — seguir fluxo nativo.
+Plan Mode é sempre disponível nativamente no Claude Code. Se o usuário respondeu "sim":
+- `USE_STRUCTURED_WORKFLOW = true`
+- Anunciar: "✅ Workflow estruturado ativo via Plan Mode nativo. Fluxo: spec document → plano detalhado → execução com TaskCreate."
+
+**Se usuário responder "não":** `USE_STRUCTURED_WORKFLOW = false` — seguir fluxo nativo.
 
 ---
 
@@ -241,11 +244,12 @@ Se `MULTI_VERSION = true`, siga esta sequência ANTES de ativar o `legacy-contex
 
 Verificar que os seguintes artefatos foram gerados no **Diretório Raiz de IA** (`[LEGACY_PATH]`), e **nunca** aninhados dentro de uma versão específica:
 
-- `[LEGACY_PATH]/GEMINI.md` — indexador raiz do ecossistema legado
+- `[LEGACY_PATH]/GEMINI.md` — indexador raiz para Gemini CLI
+- `[LEGACY_PATH]/CLAUDE.md` — indexador raiz para Claude Code (mesmo conteúdo de GEMINI.md)
 - `[LEGACY_PATH]/[pasta_ai]/ai-context.md` — contexto profundo consolidado
 - `[LEGACY_PATH]/[pasta_ai]/ai-discovery-guidelines.md` — guia de navegação cirúrgica
 
-**⛔ Não avançar para Phase 2 sem estes 3 artefatos na raiz do agrupador.**
+**⛔ Não avançar para Phase 2 sem ao menos GEMINI.md ou CLAUDE.md + os 2 artefatos de IA na raiz do agrupador.**
 
 ---
 
@@ -328,25 +332,33 @@ Verificar que os seguintes artefatos foram gerados ou que já existem previament
 6. Se o usuário escolher "Sim":
    - **Stack Push**: Faça push de `[FEATURE_X]` para a lista `PENDING_MIGRATIONS`.
    - **Modify Target**: Altere o contexto ativo (`FEATURE_NAME = [FEATURE_Y]`).
-   - **Worktrees (Superpowers isolation)**: Se `USE_SUPERPOWERS=true`, acione compulsoriamente a skill `superpowers:using-git-worktrees` para isolar a sub-migração em uma branch e pasta desatreladas, deixando que a extensão lide com a abstração do source control. Não tente rodar comandos de `git worktree add` manualmente na unha.
+   - **Worktrees (isolamento):**
+     - **Gemini CLI com Superpowers:** Acione `superpowers:using-git-worktrees` para isolar a sub-migração.
+     - **Claude Code:** Use `git worktree add <path> -b migration/<FEATURE_Y>` via Bash tool para criar um worktree isolado manualmente.
+     - **Sem worktrees:** Crie uma branch `migration/<FEATURE_Y>` normalmente.
    - **Reset**: Retorne o fluxo inteiramente para a **Phase 1**, instruindo o `legacy-context-engineer` a mapear `[FEATURE_Y]` do absoluto zero.
 
 ---
 
-## Phase 2.5 — Brainstorming de Especificação (Superpowers)
+## Phase 2.5 — Spec de Design (Workflow Estruturado)
 
-> 🔀 **Esta phase só existe quando `USE_SUPERPOWERS = true`.** Se `USE_SUPERPOWERS = false`, pular direto para Phase 3.
+> 🔀 **Esta phase só existe quando `USE_STRUCTURED_WORKFLOW = true`.** Se `false`, pular direto para Phase 3.
 
-**Objetivo:** Produzir uma especificação de design validada pelo usuário antes de gerar o plano de implementação. Segue o protocolo canônico da skill `superpowers:brainstorming`.
+**Objetivo:** Produzir uma especificação de design validada pelo usuário antes de gerar o plano de implementação.
 
-**Announce:** "Estou usando a skill `superpowers:brainstorming` para refinar o design desta migração."
+**Bifurcação por ambiente:**
+- **Gemini CLI:** "Estou usando a skill `superpowers:brainstorming` para refinar o design desta migração."
+- **Claude Code:** "Iniciando análise estruturada de design da migração com geração de spec document."
 
-### 2.5.1 — Contexto de Entrada para o Brainstorming
+### 2.5.1 — Contexto de Entrada para a Spec
 
-Alimentar o brainstorming com os achados das Phases 1 e 2:
+Alimentar o processo de spec com os achados das Phases 1 e 2:
+
+> **Gemini CLI:** Invocar via `/brainstorm`.
+> **Claude Code:** Usar análise estruturada direta com os dados abaixo.
 
 ```
-/brainstorm
+[/brainstorm — Gemini CLI | Análise estruturada — Claude Code]
 
 Estou migrando a feature [FEATURE_NAME] de [LEGACY_PATH] para [TARGET_PATH].
 
@@ -366,14 +378,15 @@ Instruções adicionais do usuário: [EXTRA_INSTRUCTIONS]
 2. **Perguntas clarificadoras** — uma por vez: abordagem de migração, testes, compatibilidade de API, etc.
 3. **Propor 2-3 abordagens** com trade-offs e recomendação
 4. **Apresentar design em seções** — aguardar aprovação por seção
-5. **Escrever spec/design doc** — instruir o superpowers a salvar em:
+5. **Escrever spec/design doc** — salvar em:
 
    ```
    [PASTA_DE_DOCUMENTACAO]/specs/YYYY-MM-DD-[FEATURE_NAME]-migration-design.md
    ```
 
-   > 🚨 **IMPORTANTE (Anti-Default Superpowers):** O framework tentará salvar em `docs/superpowers/specs/` na raiz do repositório. Você DEVE impedi-lo explicitamente instruindo: *"Antes de exportar a spec, faça um rastreamento e encontre a pasta de documentação existente (`docs`, `documentation`, ou sinônimos). Salve o arquivo na base `[pasta-encontrada]/specs/`, inviabilizando a criação de uma nova raiz `superpowers/` separada."*
+   > 🚨 **IMPORTANTE (Anti-Default Superpowers — Gemini CLI):** O framework tentará salvar em `docs/superpowers/specs/`. Impeça explicitamente: *"Encontre a pasta de documentação existente e salve em `[pasta-encontrada]/specs/`."*
    >
+   > **Claude Code:** Use o `Write` tool diretamente no caminho correto. Nunca crie `docs/superpowers/`.
 6. **Self-review da spec** — checar placeholders, contradições, ambiguidade
 7. **Gate de revisão do usuário** — aguardar confirmação explícita antes de prosseguir
 
@@ -390,11 +403,18 @@ Instruções adicionais do usuário: [EXTRA_INSTRUCTIONS]
 
 **Objetivo:** Produzir um plano de migração detalhado, ordenado e verificável antes de escrever qualquer código.
 
-**Delegado para:** subagente `@migration-architect` (fluxo nativo) ou `superpowers:writing-plans` (fluxo Superpowers)
+**Delegado para:**
+- **Fluxo nativo:** subagente `@migration-architect` (Gemini CLI) ou Agent tool com prompt de `agents/migration-architect.md` (Claude Code)
+- **Fluxo estruturado Gemini:** `superpowers:writing-plans`
+- **Fluxo estruturado Claude Code:** Plan Mode nativo + Write tool para salvar o plano
 
 ### 3.1 — Contexto a Passar para o Arquiteto
 
-Antes de acionar `@migration-architect`, preparar o seguinte sumário (baseado nas Phases 1 e 2):
+Antes de acionar o arquiteto, preparar o seguinte sumário (baseado nas Phases 1 e 2):
+
+> **Invocação do arquiteto:**
+> - **Gemini CLI:** `@migration-architect` com o brief abaixo.
+> - **Claude Code:** Agent tool (tipo `general-purpose`) com o conteúdo de `agents/migration-architect.md` como prompt + o brief abaixo como contexto adicional.
 
 ```
 MIGRATION BRIEF para migration-architect:
@@ -441,40 +461,47 @@ Consultar `skills/migration-mythos/references/MIGRATION_PATTERNS.md` e instruir 
 
 ---
 
-#### 3.3-A — SE `USE_SUPERPOWERS = true` → Fluxo via Superpowers `/write-plan`
+#### 3.3-A — SE `USE_STRUCTURED_WORKFLOW = true` → Fluxo Estruturado
 
-> **Pré-requisito:** A spec da Phase 2.5 deve estar aprovada antes de invocar `/write-plan`.
+> **Pré-requisito:** A spec da Phase 2.5 deve estar aprovada.
+
+---
+
+**— Gemini CLI (Superpowers `/write-plan`):**
 
 **Announce:** "Estou usando a skill `superpowers:writing-plans` para gerar o plano de migração."
 
-1. **Invocar `/write-plan`** referenciando a spec gerada no brainstorming:
-
+1. **Invocar `/write-plan`** referenciando a spec:
    ```
    /write-plan
-
    Spec de referência: [PASTA_DE_DOCUMENTACAO]/specs/YYYY-MM-DD-[FEATURE_NAME]-migration-design.md
-
    IMPORTANTE: Salve o plano em [PASTA_DE_DOCUMENTACAO]/plans/ (evite criar a pasta raiz padrão do superpowers).
    ```
+   O Superpowers gera plano com tasks bite-sized (TDD: RED → GREEN → REFACTOR), caminhos exatos e checkboxes `- [ ]`.
+2. Plano salvo em `[PASTA_DE_DOCUMENTACAO]/plans/YYYY-MM-DD-[FEATURE_NAME]-migration.md`
+3. Self-review automático do Superpowers + apresentação ao usuário para aprovação.
+4. Após aprovação: seguir para **Phase 4-A-Gemini**.
 
-   O Superpowers usará a spec como insumo primário e gerará o plano com:
+---
 
-   - Header canônico com Goal, Architecture, Tech Stack
-   - Tasks bite-sized (2-5 min cada) com TDD (RED → GREEN → REFACTOR)
-   - Caminhos exatos de arquivo, código completo, comandos com output esperado
-   - Checkboxes `- [ ]` para rastreamento de progresso
-2. Plano salvo em:
+**— Claude Code (Plan Mode + Write):**
 
+**Announce:** "Gerando plano de migração estruturado via Plan Mode."
+
+1. Baseado na spec aprovada (Phase 2.5), construa um plano detalhado com:
+   - Header: Goal, Architecture, Tech Stack
+   - Tasks bite-sized numeradas com: descrição, arquivos afetados, critério de aceitação, comando de verificação
+   - Checkboxes `- [ ]` para rastreamento
+2. Escreva o plano usando o `Write` tool em:
    ```
    [PASTA_DE_DOCUMENTACAO]/plans/YYYY-MM-DD-[FEATURE_NAME]-migration.md
    ```
-3. **Self-review automático do plano** (Superpowers executa internamente):
-
+3. **Self-review manual do plano:**
    - Cobertura da spec: todas as requirements têm task correspondente?
-   - Scan de placeholders: nenhum TBD, TODO, "implement later"
+   - Sem TBD, TODO, "implement later" sem resolução
    - Consistência de tipos e nomes entre tasks
-4. **Apresentar o plano ao usuário e aguardar aprovação** — o Superpowers faz isso; não pular.
-5. Após aprovação: seguir para **Phase 4-A** (execução via Superpowers).
+4. Apresente ao usuário e aguarde aprovação explícita.
+5. Após aprovação: seguir para **Phase 4-A-Claude**.
 
 ---
 
@@ -529,35 +556,47 @@ verificando cada passo antes de avançar.
 
 ---
 
-### 4-A — SE `USE_SUPERPOWERS = true` → Execução via Superpowers `/execute-plan`
+### 4-A — SE `USE_STRUCTURED_WORKFLOW = true` → Execução Estruturada
 
-**Announce:** "Estou usando a skill `superpowers:executing-plans` para executar o plano de migração."
+---
 
-**Executor:** Superpowers `executing-plans` skill
+**— 4-A-Gemini: Superpowers `/execute-plan`**
 
-**Processo:**
+**Announce:** "Estou usando `superpowers:executing-plans` para executar o plano."
 
-1. Carregar o plano gerado em `docs/superpowers/plans/YYYY-MM-DD-<feature-name>-migration.md`
-2. Revisar criticamente o plano — levantar dúvidas ao usuário antes de iniciar
-3. Invocar o fluxo via comando:
-   ```
-   /execute-plan
-   ```
-4. Executar em **batches de 3 tasks** com checkpoints:
-   - Marcar tarefa como `in_progress`
-   - Seguir cada step do plano exatamente (TDD: test → fail → implement → pass → commit)
-   - Após cada batch: reportar o que foi implementado + output de verificação
-   - Aguardar feedback do usuário antes do próximo batch
-5. Se bloqueio mid-batch: **PARAR e escalar** (não adivinhar)
-6. Após todas as tasks: usar `superpowers:finishing-a-development-branch` para fechamento
+1. Carregar o plano em `[PASTA_DE_DOCUMENTACAO]/plans/YYYY-MM-DD-<feature-name>-migration.md`
+2. Revisar criticamente + levantar dúvidas antes de iniciar
+3. Invocar `/execute-plan`
+4. Executar em **batches de 3 tasks** com checkpoints (TDD: test → fail → implement → pass → commit)
+5. Se bloqueio mid-batch: **PARAR e escalar**
+6. Após todas as tasks: usar `superpowers:finishing-a-development-branch`
 
-**Regras Superpowers que se aplicam durante a execução:**
+> Após conclusão, retomar na **Phase 5** (Validação).
 
+---
+
+**— 4-A-Claude: Execução via TaskCreate + Checkpoints**
+
+**Announce:** "Iniciando execução estruturada via task tracking nativo."
+
+1. Carregar o plano em `[PASTA_DE_DOCUMENTACAO]/plans/YYYY-MM-DD-<feature-name>-migration.md`
+2. Criar tasks no sistema de tarefas para cada task do plano (use `TaskCreate` para as principais)
+3. Executar em **batches de 3 tasks** com checkpoints:
+   - `TaskUpdate` → `status: in_progress` antes de iniciar
+   - Executar o trabalho do plano exatamente
+   - Verificar critério de aceitação
+   - `TaskUpdate` → `status: completed` após verificação
+   - Reportar ao usuário: o que foi feito + output de verificação
+   - **⛔ AGUARDAR** feedback do usuário antes do próximo batch
+4. Se bloqueio mid-batch: **PARAR e escalar** (não adivinhar)
+5. Após todas as tasks: criar commit final de integração
+
+**Regras durante execução (ambos os ambientes):**
 - Nunca pular verificações definidas no plano
 - Commits atômicos por task (conforme definido em 4.2)
 - Escalar obrigatoriamente conforme 4.5
 
-> Após conclusão da Phase 4-A, retomar o fluxo nativo na **Phase 5** (Validação).
+> Após conclusão, retomar na **Phase 5** (Validação).
 
 ---
 
@@ -640,9 +679,13 @@ Sempre escalar (não tentar resolver autonomamente) quando:
 
 **Objetivo:** Garantir que a feature migrada funciona corretamente no repositório destino.
 
-**Delegado para:** subagente `@migration-validator`
+**Delegado para:** subagente `@migration-validator` (Gemini CLI) ou Agent tool com prompt de `agents/migration-validator.md` (Claude Code)
 
 ### 5.1 — Contexto a Passar para o Validador
+
+> **Invocação do validador:**
+> - **Gemini CLI:** `@migration-validator` com o brief abaixo.
+> - **Claude Code:** Agent tool (tipo `general-purpose`) com o conteúdo de `agents/migration-validator.md` como prompt + o brief abaixo como contexto.
 
 ```
 VALIDATION BRIEF para migration-validator:
@@ -727,7 +770,10 @@ Salvar como: `MIGRATION_REPORT_<FEATURE_NAME>_<YYYYMMDD>.md`
    - Faça Pop da última feature pausada e mude `FEATURE_NAME` de volta para `Feature X`.
    - Comunique ao usuário: *"A migração dependente [FEATURE_Y] finalizou no relatório. Sua pendência original [FEATURE_X] teve seus bloqueios eliminados. Retomando context de migração..."*
    - Volte para o repositório principal de trabalho/worktree correta da Feature X.
-   - Pule direto para a **Phase 2.5** (se usando Superpowers) executando `/brainstorm` para Feature X com a nova branch e o novo contexto que [FEATURE_Y] já existe. Ou Phase 3 (se nativo).
+   - Pule direto para a **Phase 2.5** (se `USE_STRUCTURED_WORKFLOW=true`) para Feature X com o novo contexto que [FEATURE_Y] já existe:
+     - Gemini CLI: invocar `/brainstorm`
+     - Claude Code: análise estruturada direta com Write tool para spec
+   - Ou Phase 3 diretamente (se `USE_STRUCTURED_WORKFLOW=false`).
 
 ---
 
@@ -783,10 +829,10 @@ business_rules.md tem divergências entre versões documentadas?
 
 | Recurso                    | Caminho                                                           | Propósito                                                      |
 | -------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------- |
-| Skill: Context Engineering | `legacy-context-engineer` (skill externa)                       | Gera GEMINI.md, ai-context.md, ai-discovery-guidelines.md       |
+| Skill: Context Engineering | `legacy-context-engineer` (skill externa)                       | Gera GEMINI.md + CLAUDE.md, ai-context.md, ai-discovery-guidelines.md |
 | Skill: Feature Archaeology | `legacy-feature-archaeologist` (skill externa)                  | Gera overview.md, business_rules.md, tech_design.md             |
-| Subagente: Arquiteto       | `agents/migration-architect.md`                                 | Plano de migração detalhado                                   |
-| Subagente: Validador       | `agents/migration-validator.md`                                 | Validação pós-migração                                     |
+| Subagente: Arquiteto       | `agents/migration-architect.md`                                 | Plano de migração detalhado (Gemini: `@migration-architect` / Claude Code: Agent tool) |
+| Subagente: Validador       | `agents/migration-validator.md`                                 | Validação pós-migração (Gemini: `@migration-validator` / Claude Code: Agent tool) |
 | Padrões de Migração     | `skills/migration-mythos/references/MIGRATION_PATTERNS.md`      | Strangler Fig, ACL, etc.                                        |
 | Checklist de Verificação | `skills/migration-mythos/references/VERIFICATION_CHECKLIST.md`  | Validação completa                                            |
 | Script: Diff de Versões   | `skills/migration-mythos/scripts/diff_versions.py`              | Comparação multi-versão                                      |
@@ -796,85 +842,89 @@ business_rules.md tem divergências entre versões documentadas?
 | Script: Validação        | `skills/migration-mythos/scripts/validate_migration.py`         | Validação automatizada                                        |
 | Template de Relatório     | `skills/migration-mythos/assets/migration_report_template.md`   | Relatório final de migração                                  |
 | Schema do Feature Map      | `skills/migration-mythos/assets/feature_map_schema.json`        | Schema JSON para feature maps                                   |
-| Ext: Superpowers           | `gemini extensions install https://github.com/obra/superpowers` | Brainstorming + planning TDD + execução em batches (opcional) |
+| Ext: Superpowers (Gemini)  | `gemini extensions install https://github.com/obra/superpowers` | Brainstorming + planning TDD + execução em batches (Gemini CLI only) |
+| Plan Mode (Claude Code)    | Nativo no Claude Code                                           | Workflow estruturado equivalente ao Superpowers no Claude Code  |
 
 ---
 
-## Integração com Superpowers
+## Workflow Estruturado: Superpowers (Gemini CLI) vs Plan Mode (Claude Code)
 
-A extensão [Superpowers](https://github.com/obra/superpowers) é uma integração **opcional** que adiciona as Phases 2.5 (brainstorming) e substitui as Phases 3 e 4 por workflows mais rigorosos baseados em TDD e revisão em batches. Segue o fluxo canônico: **spec → plano → execução**.
+O workflow estruturado é uma integração **opcional** que adiciona as Phases 2.5 (spec) e enriquece as Phases 3 e 4 com planejamento rigoroso e execução em batches. Flag: `USE_STRUCTURED_WORKFLOW = true`.
 
 ### Quando Usar
 
-| Cenário                                          | Recomendação                                              |
-| ------------------------------------------------- | ----------------------------------------------------------- |
-| Migração complexa com muitos componentes        | Superpowers (spec + plano bite-sized facilita rastreamento) |
-| Time novo no destino (baixo conhecimento do repo) | Superpowers (brainstorming levanta dúvidas antes de codar) |
-| Migração rápida e feature simples              | Fluxo nativo (menos overhead)                               |
-| Ambiente sem gemini-cli instalado                 | Fluxo nativo                                                |
+| Cenário                                          | Recomendação                                                     |
+| ------------------------------------------------- | ----------------------------------------------------------------- |
+| Migração complexa com muitos componentes        | Workflow estruturado (spec + plano bite-sized facilita rastreamento) |
+| Time novo no destino (baixo conhecimento do repo) | Workflow estruturado (levanta dúvidas antes de codar)           |
+| Migração rápida e feature simples              | Fluxo nativo (menos overhead)                                     |
 
-### Instalação
+### Gemini CLI: Superpowers
 
+**Instalação:**
 ```bash
 gemini extensions install https://github.com/obra/superpowers
 ```
 
-### Estrutura de Diretórios (Comportamento Customizado)
+| Skill Superpowers                              | Phase         | O que Faz                                          |
+| ---------------------------------------------- | ------------- | -------------------------------------------------- |
+| `superpowers:brainstorming`                  | Phase 2.5     | Refina design, gera spec em `[DOCS]/specs/`      |
+| `superpowers:writing-plans`                  | Phase 3.3-A   | Gera plano bite-sized com TDD em `[DOCS]/plans/` |
+| `superpowers:executing-plans`                | Phase 4-A     | Executa plano em batches com checkpoints           |
+| `superpowers:finishing-a-development-branch` | Pós Phase 4-A | Verifica e encerra branch de migração            |
+| `superpowers:using-git-worktrees`            | Phase 2.1     | Isola sub-migrações em branches/worktrees        |
 
-Forçaremos a extensão a não criar sua raiz primária, e sim se aninhar dentro da pasta de documentação natural que o usuário já utiliza na base do projeto:
+### Claude Code: Plan Mode Nativo
+
+Todas as funcionalidades do Superpowers têm equivalente nativo no Claude Code:
+
+| Superpowers (Gemini CLI)    | Claude Code Equivalent              |
+| --------------------------- | ----------------------------------- |
+| `/brainstorm`               | Análise estruturada + Write spec doc |
+| `/write-plan`               | Write plano .md + Task tracking      |
+| `/execute-plan`             | TaskCreate + execução por batch     |
+| `finishing-a-development-branch` | git commit final + branch cleanup |
+| `using-git-worktrees`       | `git worktree add` via Bash tool    |
+
+### Estrutura de Diretórios (ambos os ambientes)
 
 ```
 [PASTA_DE_DOCUMENTACAO_DO_USUARIO]/
-├── specs/   ← design docs gerados pelo brainstorming
+├── specs/   ← design docs (Phase 2.5)
 │   └── YYYY-MM-DD-<feature>-migration-design.md
-└── plans/   ← planos gerados pelo /write-plan
+└── plans/   ← planos de migração (Phase 3)
     └── YYYY-MM-DD-<feature>-migration.md
 ```
 
-### Skills do Superpowers Utilizadas
-
-| Skill                                          | Quando Ativada                         | O que Faz                                          |
-| ---------------------------------------------- | -------------------------------------- | -------------------------------------------------- |
-| `superpowers:brainstorming`                  | Phase 2.5 com `USE_SUPERPOWERS=true` | Refina design, gera spec em `[DOCS]/specs/`      |
-| `superpowers:writing-plans`                  | Phase 3 com `USE_SUPERPOWERS=true`   | Gera plano bite-sized com TDD em `[DOCS]/plans/` |
-| `superpowers:executing-plans`                | Phase 4 com `USE_SUPERPOWERS=true`   | Executa plano em batches com checkpoints           |
-| `superpowers:finishing-a-development-branch` | Após Phase 4-A concluir               | Verifica e encerra branch de migração            |
-
-### Comandos Slash Relevantes
-
-| Comando           | Equivalente Nativo                              |
-| ----------------- | ----------------------------------------------- |
-| `/brainstorm`   | Phase 2.5 (spec de design)                      |
-| `/write-plan`   | Phase 3 (planning via `@migration-architect`) |
-| `/execute-plan` | Phase 4 (execução loop com auto-correção)   |
-
-### Fluxo Completo com Superpowers
+### Fluxo Completo com Workflow Estruturado
 
 ```
-Phase 0 → opt-in? sim + disponível?
+Phase 0 → opt-in workflow estruturado?
    ↓ sim
-   USE_SUPERPOWERS = true
+   USE_STRUCTURED_WORKFLOW = true
    ↓
 Phase 1 → legacy-context-engineer    (inalterado)
    ↓
 Phase 2 → legacy-feature-archaeologist    (inalterado)
    ↓
-Phase 2.5 → superpowers:brainstorming via /brainstorm
-           → spec salva em [DOCS]/specs/YYYY-MM-DD-<feature>-migration-design.md
-           → GATE: aprovação da spec pelo usuário (obrigatório)
+Phase 2.5 → Spec de design
+   Gemini: superpowers:brainstorming via /brainstorm
+   Claude: análise estruturada + Write tool
+   → spec salva em [DOCS]/specs/YYYY-MM-DD-<feature>-migration-design.md
+   → GATE: aprovação da spec pelo usuário (obrigatório)
    ↓
-Phase 3 → superpowers:writing-plans via /write-plan
-         → referencia spec aprovada
-         → plano salvo em [DOCS]/plans/YYYY-MM-DD-<feature>-migration.md
-         → self-review automático do plano
-         → GATE: aprovação do plano pelo usuário (obrigatório)
+Phase 3 → Plano estruturado
+   Gemini: superpowers:writing-plans via /write-plan
+   Claude: plano detalhado via Write + Task tracking
+   → plano salvo em [DOCS]/plans/YYYY-MM-DD-<feature>-migration.md
+   → GATE: aprovação do plano pelo usuário (obrigatório)
    ↓
-Phase 4 → superpowers:executing-plans via /execute-plan
-         → batches de 3 tasks + checkpoints
-         → TDD: RED → GREEN → REFACTOR → commit por task
-         → superpowers:finishing-a-development-branch
+Phase 4 → Execução em batches
+   Gemini: superpowers:executing-plans via /execute-plan
+   Claude: TaskCreate → batches de 3 tasks → checkpoints
+   → commits atômicos por task
    ↓
-Phase 5 → @migration-validator    (inalterado)
+Phase 5 → migration-validator    (inalterado)
    ↓
 Phase 6 → relatório final    (inalterado)
 ```

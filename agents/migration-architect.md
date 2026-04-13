@@ -6,10 +6,16 @@ description: >
   Produces ordered migration tasks, rollback strategies, test plans, and API contracts.
   Called by the migration-mythos skill during Phase 3.
 tools:
+  # Gemini CLI tool names:
   - read_file
   - write_file
   - list_directory
   - run_shell_command
+  # Claude Code tool names (equivalents):
+  - Read
+  - Write
+  - Bash
+  - Glob
 model: inherit
 temperature: 0.3
 max_turns: 30

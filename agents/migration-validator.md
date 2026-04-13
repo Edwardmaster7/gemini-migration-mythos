@@ -5,11 +5,18 @@ description: >
   Verifies correctness, completeness, test coverage, security, and absence of regressions.
   Use after migration execution is complete. Called by migration-mythos skill during Phase 5.
 tools:
+  # Gemini CLI tool names:
   - read_file
   - run_shell_command
   - grep_search
   - glob
   - list_directory
+  - mcp_github_run_secret_scanning
+  # Claude Code tool names (equivalents):
+  - Read
+  - Bash
+  - Grep
+  - Glob
   - mcp_github_run_secret_scanning
 model: inherit
 temperature: 0.1
@@ -40,6 +47,7 @@ Then systematically verify each one.
 
 Verify all expected artifacts are present:
 ```bash
+# Executar via shell (Bash tool no Claude Code, run_shell_command no Gemini CLI):
 python scripts/validate_migration.py --workspace ./migration_workspace/ --target <TARGET_PATH> --mode structural
 ```
 
